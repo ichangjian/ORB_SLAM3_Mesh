@@ -695,11 +695,11 @@ void System::SaveTrajectoryEuRoC(const string &filename)
 
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
-    Sophus::SE3f Twb; // Can be word to cam0 or world to b depending on IMU or not.
-    if (mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO || mSensor==IMU_RGBD)
-        Twb = vpKFs[0]->GetImuPose();
-    else
-        Twb = vpKFs[0]->GetPoseInverse();
+    Sophus::SE3f Twb(Eigen::Matrix3f::Identity(),Eigen::Vector3f::Zero()); // Can be word to cam0 or world to b depending on IMU or not.
+    // if (mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO || mSensor==IMU_RGBD)
+    //     Twb = vpKFs[0]->GetImuPose();
+    // else
+    //     Twb = vpKFs[0]->GetPoseInverse();
 
     ofstream f;
     f.open(filename.c_str());

@@ -1706,11 +1706,48 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &times
     return mCurrentFrame.GetPose();
 }
 
+void Tracking::processIMU(const IMU::Point &_imuMeasurement) {
+  if (mState == OK) {
+    float dt = _imuMeasurement.t - mPreIMU.t;
+    // 利用中值法获取名义角速度
+    Eigen::Vector3f un_gyr = 0.5 * (mPreIMU.w + _imuMeasurement.w) - mGryBias;
+    // 将预积分的姿态增量作为扰动添加到上一帧姿态中，获得当前帧时刻对应的名义姿态
+    Eigen::Vector3f half_theta = (un_gyr * dt) / 2.0;
+    Eigen::Quaternionf dQ;
+    dQ.w() = 1.0;
+    dQ.x() = half_theta.x();
+    dQ.y() = half_theta.y();
+    dQ.z() = half_theta.z();
+    dQ.normalize();
+    mR *= dQ.toRotationMatrix();
+
+    Eigen::Vector3f G;
+    G << 0.0, 0.0, -IMU::GRAVITY_VALUE;
+    // 获取上一imu帧名义加速度
+    Eigen::Vector3f un_acc_0 = mR * (mPreIMU.a - mAccBias) + G;
+    // 获取当前imu帧名义加速度
+    Eigen::Vector3f un_acc_1 = mR * (_imuMeasurement.a - mAccBias) + G;
+    // 利用中值积分法获取当前帧相对与上一帧位置和速度增量，并添加到上一帧位置和速度中，获取当前帧时刻对应的名义位置和速度
+    Eigen::Vector3f un_acc = 0.5 * (un_acc_0 + un_acc_1);
+    mP += dt * mV + 0.5 * dt * dt * un_acc;
+    mV += dt * un_acc;
+    // 将当前帧imu信息置为上一帧imu信息
+    mPreIMU = _imuMeasurement;
+
+    dQ = mR;
+    // std::cout << "PS a " << _imuMeasurement.t << " " << mP.x() << " " << mP.y()
+    //           << " " << mP.z() << " " << dQ.w() << " " << dQ.x() << " "
+    //           << dQ.y() << " " << dQ.z() << "\n";
+  }
+  return;
+}
 
 void Tracking::GrabImuData(const IMU::Point &imuMeasurement)
 {
     unique_lock<mutex> lock(mMutexImuQueue);
     mlQueueImuData.push_back(imuMeasurement);
+    mlQueueImuData4Pose.push_back(imuMeasurement);
+    processIMU(imuMeasurement);
 }
 
 void Tracking::PreintegrateIMU()
@@ -2409,6 +2446,22 @@ void Tracking::Track()
             mlbLost.push_back(mState==LOST);
         }
 
+        mAccBias = Eigen::Vector3f(mCurrentFrame.mImuBias.bax,
+                                   mCurrentFrame.mImuBias.bay,
+                                   mCurrentFrame.mImuBias.baz);
+        mGryBias = Eigen::Vector3f(mCurrentFrame.mImuBias.bwx,
+                                   mCurrentFrame.mImuBias.bwy,
+                                   mCurrentFrame.mImuBias.bwz);
+
+        mP = mCurrentFrame.GetImuPosition();
+        mV = mCurrentFrame.GetVelocity();
+        mR = mCurrentFrame.GetImuRotation();
+        mPreIMU=mlQueueImuData4Pose.back();
+        Eigen::Quaternionf dQ(mR);
+
+        // std::cout << "PS b " << mPreIMU.t << " " << mP.x() << " " << mP.y() << " "
+        //           << mP.z() << " " << dQ.w() << " " << dQ.x() << " " << dQ.y()
+        //           << " " << dQ.z() << "\n";
     }
 
 #ifdef REGISTER_LOOP

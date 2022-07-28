@@ -151,7 +151,7 @@ void PointCloudMapping::viewer() {
     voxel.filter(*tmp);
     globalMap->swap(*tmp);
 
-    if (true) {
+    if (globalMap->points.size() > 1e3) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(
           new pcl::PointCloud<pcl::PointXYZ>);
       pcl::copyPointCloud(*globalMap, *cloud);

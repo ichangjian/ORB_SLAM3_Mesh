@@ -376,8 +376,18 @@ protected:
     bool mbNotStop;
     std::mutex mMutexStop;
 #endif
+    // use imu to compute 6dof
+    Eigen::Vector3f mAccBias;
+    Eigen::Vector3f mGryBias;
+    Eigen::Vector3f mP;
+    Eigen::Vector3f mV;
+    Eigen::Matrix3f mR;
+    IMU::Point mPreIMU;
+    // IMU::Point mPreIMU(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    void processIMU(const IMU::Point &_imuMeasurement);
+    std::list<IMU::Point> mlQueueImuData4Pose;
 
-public:
+   public:
     cv::Mat mImRight;
 };
 
