@@ -14,9 +14,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
 
 include(CheckCXXCompilerFlag)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread")
 add_definitions(-DCOMPILEDWITHC11)
-message(STATUS "Using flag -std=c++14.")
+message(STATUS "Using flag -std=c++17 ")
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
@@ -146,6 +146,14 @@ if(realsense2_FOUND)
     add_executable(rgbd_realsense_D435i
             Examples/RGB-D/rgbd_realsense_D435i.cc)
     target_link_libraries(rgbd_realsense_D435i ${PROJECT_NAME})
+
+    add_executable(SVRS
+             Examples/RGB-D/save_rgbd_realsense.cc)
+    target_link_libraries(SVRS ${PROJECT_NAME})
+
+    add_executable(rgbd_realsense
+             Examples/RGB-D/rgbd_realsense.cc)
+    target_link_libraries(rgbd_realsense ${PROJECT_NAME})
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertial)

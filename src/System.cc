@@ -645,7 +645,8 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     ofstream f;
     f.open(filename.c_str());
     f << fixed;
-
+    // ofstream w3dp;
+    // w3dp.open("w3dp.obj");
     for(size_t i=0; i<vpKFs.size(); i++)
     {
         KeyFrame* pKF = vpKFs[i];
@@ -660,9 +661,17 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
         Eigen::Vector3f t = Twc.translation();
         f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
           << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+    //     std::set<MapPoint *> map3dp = pKF->GetMapPoints();
+    //     std::vector<MapPoint *> map3dpbig = pKF->GetMapPointMatches();
+    //     std::cout << pKF->mTimeStamp << " 2d" << pKF->mvKeys.size() << " 3d" << map3dp.size() << " 3db" << map3dpbig.size() << "\n";
+    //     for (auto p3d : map3dp)
+    //     {
+    //         Eigen::Vector3f XYZ = p3d->GetWorldPos();
 
+    //         w3dp << "v " << XYZ.x() << " " << XYZ.y() << " " << XYZ.z() << "\n";
+    //     }
     }
-
+    // w3dp.close();
     f.close();
 }
 
